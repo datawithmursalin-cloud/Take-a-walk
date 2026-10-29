@@ -3,16 +3,19 @@ import WalkCore
 
 @MainActor
 final class SettingsWindow {
-    let window = Theme.window(title: "Take a Walk Settings", width: 440, height: 490)
+    let window = Theme.window(title: "Take a Walk Settings", width: 440, height: 555)
     private let desk = NSTextField(string: "30")
     private let walk = NSTextField(string: "10")
     private let away = NSTextField(string: "10")
     private let sound = NSButton(checkboxWithTitle: "Play reminder sounds", target: nil, action: nil)
+    private let testSound = NSButton(title: "Test ringing", target: nil, action: nil)
+    private let audioStatus = Theme.label("", size: 12, color: Theme.muted)
     private let login = NSButton(checkboxWithTitle: "Start when I log in to this Mac", target: nil, action: nil)
     private let status = Theme.label("", size: 12, color: Theme.muted)
     private let validation = Theme.label("", size: 12, color: Theme.orange)
     var onSave: ((WalkSettings, Bool) -> Void)?
     var onOpenLoginSettings: (() -> Void)?
+    var onTestSound: (() -> Void)?
 
     init() {
         let stack = NSStackView()
@@ -42,7 +45,14 @@ final class SettingsWindow {
         }
         sound.contentTintColor = Theme.white
         login.contentTintColor = Theme.white
-        stack.addArrangedSubview(sound)
+        testSound.target = self
+        testSound.action = #selector(toggleTestSound)
+        testSound.bezelStyle = .rounded
+        let soundRow = NSStackView(views: [sound, testSound])
+        soundRow.spacing = 16
+        stack.addArrangedSubview(soundRow)
+        audioStatus.alignment = .left
+        stack.addArrangedSubview(audioStatus)
         stack.addArrangedSubview(login)
         status.alignment = .left
         stack.addArrangedSubview(status)
@@ -62,12 +72,23 @@ final class SettingsWindow {
             stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -32),
             stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 42),
             status.widthAnchor.constraint(equalTo: stack.widthAnchor),
+            audioStatus.widthAnchor.constraint(equalTo: stack.widthAnchor),
             note.widthAnchor.constraint(equalTo: stack.widthAnchor),
             validation.widthAnchor.constraint(equalTo: stack.widthAnchor),
             save.widthAnchor.constraint(equalTo: stack.widthAnchor),
             save.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
+
+    func updateAudioStatus(isRinging: Bool, error: String?) {
+        testSound.title = isRinging ? "Stop ringing" : "Test ringing"
+        audioStatus.stringValue = error ?? (isRinging
+            ? "Ringing for up to 1 minute. Click Stop ringing to silence it."
+            : "Repeats for up to 1 minute. Uses your Mac's output volume.")
+        audioStatus.textColor = error == nil ? Theme.muted : Theme.orange
+    }
+
+    @objc private func toggleTestSound() { onTestSound?() }
 
     func show(settings: WalkSettings, loginWanted: Bool, loginStatus: String) {
         desk.stringValue = String(settings.deskMinutes)

@@ -7,7 +7,8 @@ let package = Package(
     products: [.executable(name: "TakeAWalk", targets: ["TakeAWalk"])],
     targets: [
         .target(name: "WalkCore"),
-        .executableTarget(name: "TakeAWalk", dependencies: ["WalkCore"]),
-        .executableTarget(name: "WalkCoreChecks", dependencies: ["WalkCore"], path: "Tests/WalkCoreTests")
+        .target(name: "ReminderAudio"),
+        .executableTarget(name: "TakeAWalk", dependencies: ["WalkCore", "ReminderAudio"]),
+        .executableTarget(name: "WalkCoreChecks", dependencies: ["WalkCore", "ReminderAudio"], path: "Tests/WalkCoreTests")
     ]
 )

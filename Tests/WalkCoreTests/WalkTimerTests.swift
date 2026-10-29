@@ -144,7 +144,7 @@ func invalidTransitionsCannotSkipDeskConfirmation() {
 }
 
 
-private func expect(_ condition: @autoclosure () -> Bool,
+func expect(_ condition: @autoclosure () -> Bool,
                     file: StaticString = #filePath, line: UInt = #line) {
     guard condition() else {
         FileHandle.standardError.write(Data("FAIL: \(file):\(line)\n".utf8))
@@ -154,6 +154,7 @@ private func expect(_ condition: @autoclosure () -> Bool,
 
 @main
 struct WalkCoreChecks {
+    @MainActor
     static func main() {
         let tests: [(String, () -> Void)] = [
             ("Waits for explicit desk confirmation", waitsForExplicitDeskConfirmation),
@@ -168,7 +169,13 @@ struct WalkCoreChecks {
             ("Sleep during walk preserves return requirement", sleepDuringWalkPreservesBreakAndReturnRequirement),
             ("Settings apply correctly to work and walking", settingsChangeRestartsActiveDeskTimerButNotWalk),
             ("Sound setting preserves work countdown", changingSoundDoesNotResetWork),
-            ("Invalid transitions cannot skip confirmation", invalidTransitionsCannotSkipDeskConfirmation)
+            ("Invalid transitions cannot skip confirmation", invalidTransitionsCannotSkipDeskConfirmation),
+            ("Ringing stops at one minute", ringingStopsAtOneMinuteWithoutRepeatingTheNotification),
+            ("Acknowledgment stops and releases audio", acknowledgedAlarmStopsAndReleasesItsPlayer),
+            ("Restarted alarm gets a full minute", restartingAnAlarmGetsItsOwnFullMinute),
+            ("Failed playback is reported", failedAudioStartIsReportedWithoutClaimingToRing),
+            ("Interrupted playback is cleaned up", interruptedAudioIsReportedAndCleanedUp),
+            ("Bell decodes as non-silent audio", generatedBellDecodesAsTwoSecondsOfNonSilentAudio)
         ]
         for (name, test) in tests {
             test()

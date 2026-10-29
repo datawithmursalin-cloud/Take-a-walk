@@ -2,6 +2,7 @@ import AppKit
 import CoreGraphics
 import ServiceManagement
 import WalkCore
+import ReminderAudio
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -13,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var pauseItem: NSMenuItem!
     private var walkItem: NSMenuItem!
     private var loginItem: NSMenuItem!
+    private var stopSoundItem: NSMenuItem!
+    private let alarm = ReminderAlarm()
     private let reminder = ReminderWindow()
     private let preferences = SettingsWindow()
     private let defaults = UserDefaults.standard
@@ -43,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         addItem("Show Take a Walk", action: #selector(showReminder))
         walkItem = addItem("Start walk now", action: #selector(startWalk))
+        stopSoundItem = addItem("Stop ringing", action: #selector(stopRinging))
         pauseItem = addItem("Pause desk timer", action: #selector(togglePause))
         menu.addItem(.separator())
         addItem("Settings…", action: #selector(showSettings), key: ",")
@@ -53,9 +57,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         reminder.onPrimary = { [weak self] in self?.primaryAction() }
         reminder.onSettings = { [weak self] in self?.showSettings() }
+        reminder.onSilence = { [weak self] in self?.alarm.stop() }
+        alarm.onChange = { [weak self] in self?.refresh() }
+        preferences.onTestSound = { [weak self] in
+            guard let self else { return }
+            if self.alarm.isRinging { self.alarm.stop() } else { self.alarm.start() }
+        }
         preferences.onSave = { [weak self] settings, loginWanted in
             guard let self else { return }
             self.engine.updateSettings(settings, now: Date())
+            if !settings.soundEnabled { self.alarm.stop() }
             if !self.isPreview {
                 self.defaults.set(try? JSONEncoder().encode(settings), forKey: "walkSettings")
                 self.defaults.set(loginWanted, forKey: "startAtLogin")
@@ -101,10 +112,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let idle = CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: anyInput)
         if let event = engine.tick(now: now, idleSeconds: idle) {
             refresh()
-            if event == .walkReminder || event == .walkFinished { playSound() }
+            if event == .walkReminder || event == .walkFinished, engine.settings.soundEnabled { alarm.start() }
             reminder.show()
         } else {
-            if engine.phase == .away, previousPhase != .away { reminder.window.orderOut(nil) }
+            if engine.phase == .away, previousPhase != .away {
+                alarm.stop()
+                reminder.window.orderOut(nil)
+            }
             refresh()
         }
     }
@@ -112,6 +126,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func refresh() {
         let now = Date()
         reminder.render(engine, now: now)
+        reminder.setRinging(alarm.isRinging)
+        preferences.updateAudioStatus(isRinging: alarm.isRinging, error: alarm.errorMessage)
         let state: String
         switch engine.phase {
         case .awaitingDesk: state = "Ready"; summaryItem.title = "Waiting for desk confirmation"
@@ -128,6 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pauseItem.title = engine.phase == .paused ? "Resume desk timer" : "Pause desk timer"
         pauseItem.isEnabled = engine.phase == .working || engine.phase == .paused
         walkItem.isEnabled = engine.phase == .working || engine.phase == .walkDue
+        stopSoundItem.isEnabled = alarm.isRinging
         loginItem.title = loginStatus
     }
 
@@ -158,12 +175,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func playSound() {
-        guard engine.settings.soundEnabled else { return }
-        if let sound = NSSound(named: "Glass") { sound.play() } else { NSSound.beep() }
-    }
-
     private func primaryAction() {
+        alarm.stop()
         switch engine.phase {
         case .awaitingDesk, .away, .walking, .breakFinished:
             engine.confirmDesk(now: Date())
@@ -177,8 +190,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func showReminder() { refresh(); reminder.show() }
-    @objc private func startWalk() { engine.startWalk(now: Date()); refresh(); reminder.show() }
+    @objc private func startWalk() { alarm.stop(); engine.startWalk(now: Date()); refresh(); reminder.show() }
+    @objc private func stopRinging() { alarm.stop() }
     @objc private func togglePause() {
+        alarm.stop()
         if engine.phase == .paused { engine.resume(now: Date()) } else { engine.pause(now: Date()) }
         refresh()
     }
@@ -186,7 +201,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         preferences.show(settings: engine.settings, loginWanted: defaults.bool(forKey: "startAtLogin"), loginStatus: loginStatus)
     }
     @objc private func openLoginItems() { SMAppService.openSystemSettingsLoginItems() }
-    @objc private func quit() { NSApp.terminate(nil) }
+    @objc private func quit() { alarm.stop(); NSApp.terminate(nil) }
+    func applicationWillTerminate(_ notification: Notification) { alarm.stop() }
     func menuWillOpen(_ menu: NSMenu) { refresh() }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         showReminder()
@@ -209,6 +225,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func sessionResigned() { sessionInactive = true; handleAbsence() }
     @objc private func sessionBecameActive() { sessionInactive = false; lastTick = Date() }
     private func handleAbsence() {
+        alarm.stop()
         engine.markAway()
         reminder.window.orderOut(nil)
         refresh()

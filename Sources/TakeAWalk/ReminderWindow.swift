@@ -2,7 +2,7 @@ import AppKit
 import WalkCore
 
 @MainActor
-final class ReminderWindow {
+final class ReminderWindow: NSObject, NSWindowDelegate {
     let window = Theme.window(title: "Take a Walk", width: 470, height: 520)
     private let eyebrow = Theme.label("A LITTLE ROOM TO MOVE", size: 11, weight: .semibold, color: Theme.orange)
     private let symbol = NSImageView()
@@ -14,8 +14,12 @@ final class ReminderWindow {
     private let secondary = ActionButton(title: "Hide for now", target: nil, action: nil)
     var onPrimary: (() -> Void)?
     var onSettings: (() -> Void)?
+    var onSilence: (() -> Void)?
+    private var isRinging = false
 
-    init() {
+    override init() {
+        super.init()
+        window.delegate = self
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         let content = window.contentView!
@@ -135,7 +139,17 @@ final class ReminderWindow {
         window.makeKeyAndOrderFront(nil)
     }
 
+    func setRinging(_ ringing: Bool) {
+        isRinging = ringing
+        secondary.title = ringing ? "Stop ringing" : "Hide for now"
+        secondary.needsDisplay = true
+    }
+
+    func windowWillClose(_ notification: Notification) { onSilence?() }
+
     @objc private func performPrimary() { onPrimary?() }
     @objc private func openSettings() { onSettings?() }
-    @objc private func hide() { window.orderOut(nil) }
+    @objc private func hide() {
+        if isRinging { onSilence?() } else { window.orderOut(nil) }
+    }
 }

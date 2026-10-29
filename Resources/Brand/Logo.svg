@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 78 78" role="img" aria-label="Take a Walk logo">
+  <rect x="4" y="4" width="70" height="70" rx="15.5" fill="#162539"/>
+  <circle cx="40.5" cy="18.2" r="4.6" fill="#FF8C4C"/>
+  <path d="M39.0 28.5 L30.4 32.9 L27.0 41.4" fill="none" stroke="#FF8C4C" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40.5 29.2 L46.7 36.1 L53.0 36.1" fill="none" stroke="#FF8C4C" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40.0 28.9 L36.8 40.8 L39.0 45.0" fill="none" stroke="#FF8C4C" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M37.5 44.0 L33.8 53.0 L26.0 61.0" fill="none" stroke="#FF8C4C" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38.5 44.2 L43.7 52.0 L51.0 61.5" fill="none" stroke="#FF8C4C" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

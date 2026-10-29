@@ -21,7 +21,9 @@ if [ -e "$app_dir" ]; then
     fi
 fi
 mkdir -p "$app_dir/Contents/MacOS"
+mkdir -p "$app_dir/Contents/Resources"
 cp .build/release/TakeAWalk "$app_dir/Contents/MacOS/TakeAWalk"
+cp Resources/AppIcon.icns "$app_dir/Contents/Resources/AppIcon.icns"
 cp Resources/Info.plist "$app_dir/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_id" "$app_dir/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleName $app_name" "$app_dir/Contents/Info.plist"
