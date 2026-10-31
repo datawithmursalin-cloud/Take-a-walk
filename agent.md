@@ -63,3 +63,13 @@
 - Final validation: all 19 checks pass, shell syntax and Info.plist validate, and the installed app passes strict code-signature verification.
 - Keep build caches, generated iconsets, and local preferences out of Git. Preserve the agreed `.gitignore`; ask before changing its exclusions.
 - Actual sound audibility, login after logout, full-screen behavior, and second-device acceptance remain user checks. Future commits or pushes still require fresh user confirmation.
+
+## Menu bar actions
+
+- On 2026-10-31, fetched and pulled `main` at the user's request; the checkout was already up to date.
+- The menu starts with **Start Walk Now** and **I'm Back on My Desk**, ahead of the status summary and other controls. Enable actions only in the corresponding timer phases; desk confirmation also works on initial launch and after absence.
+- Both actions stop ringing and dismiss the reminder without opening or activating the app window. A due reminder still waits for explicit walk start, allowing the user to finish work first and start the walk later from the menu.
+- Menu bar **Stop ringing** also hides the popup while preserving the pending walk, so postponing the walk requires no interaction with the app window.
+- Updated and signature-verified both `~/Applications/Take a Walk.app` and the user's running copy at `/Applications/Take a Walk.app`; restarted the normal app after closing the preview. Restarting resets the in-memory countdown and waits for desk confirmation.
+- All 19 deterministic checks and the release build pass. Native reminder preview was inspected; the UI tool timed out accessing system menu bar surfaces, so visual menu verification remains a user check.
+- The user explicitly authorized committing and pushing these menu bar updates to `main` on 2026-10-31.

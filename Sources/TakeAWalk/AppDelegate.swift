@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let summaryItem = NSMenuItem(title: "Waiting for your desk confirmation", action: nil, keyEquivalent: "")
     private var pauseItem: NSMenuItem!
     private var walkItem: NSMenuItem!
+    private var deskItem: NSMenuItem!
     private var loginItem: NSMenuItem!
     private var stopSoundItem: NSMenuItem!
     private let alarm = ReminderAlarm()
@@ -41,11 +42,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         menu.delegate = self
         menu.autoenablesItems = false
+        walkItem = addItem("Start Walk Now", action: #selector(startWalk))
+        deskItem = addItem("I'm Back on My Desk", action: #selector(confirmDesk))
+        menu.addItem(.separator())
         summaryItem.isEnabled = false
         menu.addItem(summaryItem)
         menu.addItem(.separator())
         addItem("Show Take a Walk", action: #selector(showReminder))
-        walkItem = addItem("Start walk now", action: #selector(startWalk))
         stopSoundItem = addItem("Stop ringing", action: #selector(stopRinging))
         pauseItem = addItem("Pause desk timer", action: #selector(togglePause))
         menu.addItem(.separator())
@@ -144,6 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pauseItem.title = engine.phase == .paused ? "Resume desk timer" : "Pause desk timer"
         pauseItem.isEnabled = engine.phase == .working || engine.phase == .paused
         walkItem.isEnabled = engine.phase == .working || engine.phase == .walkDue
+        deskItem.isEnabled = [.awaitingDesk, .away, .walking, .breakFinished].contains(engine.phase)
         stopSoundItem.isEnabled = alarm.isRinging
         loginItem.title = loginStatus
     }
@@ -190,8 +194,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func showReminder() { refresh(); reminder.show() }
-    @objc private func startWalk() { alarm.stop(); engine.startWalk(now: Date()); refresh(); reminder.show() }
-    @objc private func stopRinging() { alarm.stop() }
+    @objc private func startWalk() {
+        alarm.stop()
+        engine.startWalk(now: Date())
+        reminder.window.orderOut(nil)
+        refresh()
+    }
+    @objc private func confirmDesk() {
+        alarm.stop()
+        engine.confirmDesk(now: Date())
+        reminder.window.orderOut(nil)
+        refresh()
+    }
+    @objc private func stopRinging() {
+        alarm.stop()
+        reminder.window.orderOut(nil)
+        refresh()
+    }
     @objc private func togglePause() {
         alarm.stop()
         if engine.phase == .paused { engine.resume(now: Date()) } else { engine.pause(now: Date()) }

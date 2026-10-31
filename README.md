@@ -59,7 +59,9 @@ The first build can take a minute. The launcher installs the app at `~/Applicati
 - **Walk:** Click **Start walk** to begin a 10-minute countdown. The desk timer stays on hold.
 - **Return:** When the walk ends, another popup and repeating bell appear, again for up to one minute. A fresh desk timer starts only after you click **I'm back**. You can also return early.
 - **Away:** After 10 minutes without mouse or keyboard input, the app marks you away. When input resumes, confirm you're at your desk to start a fresh timer. Sleep and screen lock also end a working desk session.
-- **Controls:** Use the menu bar for the countdown, **Show Take a Walk**, **Start walk now**, **Pause desk timer**, **Settings**, or **Quit**. The gear in the popup also opens Settings. Hiding a popup doesn't quit the app or start a walk.
+- **Controls:** **Start Walk Now** and **I'm Back on My Desk** are the first two items in the menu bar menu. Start a walk, confirm your initial desk session, or return from a walk without opening the app window. Each action is available when it applies to your current session, stops ringing, and hides the popup. The menu also provides **Show Take a Walk**, **Stop ringing**, **Pause desk timer**, **Settings**, and **Quit**. The gear in the popup also opens Settings. Hiding a popup doesn't quit the app or start a walk.
+
+If you're in the middle of something when a walk reminder arrives, choose **Stop ringing** from the menu to silence it and hide the popup. The app waits until you choose **Start Walk Now** from the menu; your walk countdown begins at that moment. Choose **I'm Back on My Desk** when you return to start a fresh desk timer.
 
 Settings let you change the desk, walk, and inactivity durations, mute reminder sounds, and control login startup. A changed desk duration restarts a running desk timer; an ongoing walk keeps its original remaining time. After relaunch, the app waits for desk confirmation again.
 
